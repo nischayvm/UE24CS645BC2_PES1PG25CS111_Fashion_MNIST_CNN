@@ -204,6 +204,97 @@ After training, two plots are saved in the same directory:
 
 ---
 
+## Training & Test Curves
+
+The plots below show how training and test **loss** and **accuracy** evolve across each epoch. They are generated automatically at the end of training and saved to the `results/` folder.
+
+### Loss across Epochs (Train vs. Test)
+
+![Training Curves](results/training_curves.png)
+
+- **Train loss** (blue) drops steadily from ~1.20 → ~0.40, indicating the network is learning effectively.
+- **Test loss** (red) also decreases overall, from ~0.76 → ~0.47, though with minor fluctuations — characteristic of mini-batch SGD.
+- The narrowing gap between train and test loss from epoch 6 onward suggests the model is generalising well given the small dataset size.
+
+### Accuracy across Epochs (Train vs. Test)
+
+- **Train accuracy** rises from 57.73% → 86.25%, a gain of ~29 percentage points across 10 epochs.
+- **Test accuracy** climbs from 73.30% → 82.60%, peaking at **84.70%** at Epoch 9.
+- The test accuracy consistently lags behind train accuracy — a normal sign of mild overfitting, which would reduce further with more training data or regularisation (dropout, L2).
+
+### Sample Predictions
+
+![Predictions](results/predictions.png)
+
+Green titles indicate correct predictions; red titles indicate misclassifications. The model confidently distinguishes structured classes (Trouser, Sneaker, Bag) but occasionally confuses visually similar ones (Shirt vs. T-shirt, Coat vs. Pullover).
+
+---
+
+## Plotting Code
+
+The `plot_history()` function generates the training/test loss and accuracy curves. It is called automatically at the end of training, but can also be called standalone:
+
+```python
+def plot_history(history, save_path="results/training_curves.png"):
+    """
+    Plots train vs. test loss and accuracy across epochs.
+
+    Parameters
+    ----------
+    history   : dict with keys 'train_loss', 'train_acc', 'test_loss', 'test_acc'
+                each a list of per-epoch values returned by train()
+    save_path : path where the figure is saved
+    """
+    epochs = range(1, len(history['train_loss']) + 1)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+    fig.suptitle("CNN Training on Fashion-MNIST", fontsize=14, fontweight='bold')
+
+    # ── Loss plot ──────────────────────────────────────────────────────────
+    ax1.plot(epochs, history['train_loss'], 'b-o', markersize=4, label='Train Loss')
+    ax1.plot(epochs, history['test_loss'],  'r-o', markersize=4, label='Test  Loss')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Cross-Entropy Loss')
+    ax1.set_title('Loss per Epoch')
+    ax1.legend()
+    ax1.grid(alpha=0.3)
+
+    # ── Accuracy plot ──────────────────────────────────────────────────────
+    ax2.plot(epochs, [a * 100 for a in history['train_acc']], 'b-o', markersize=4, label='Train Acc')
+    ax2.plot(epochs, [a * 100 for a in history['test_acc']],  'r-o', markersize=4, label='Test  Acc')
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Accuracy (%)')
+    ax2.set_title('Accuracy per Epoch')
+    ax2.legend()
+    ax2.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=120)
+    plt.show()
+```
+
+The `history` dictionary is returned by `train()` and contains four lists — one value per epoch:
+
+```python
+history = {
+    'train_loss': [...],   # average cross-entropy loss over training batches
+    'train_acc' : [...],   # average accuracy over training batches
+    'test_loss' : [...],   # loss evaluated on the full test set
+    'test_acc'  : [...],   # accuracy evaluated on the full test set
+}
+```
+
+To reproduce the plots independently after training:
+
+```python
+# After calling train():
+history = train(model, X_train, y_train, X_test, y_test, epochs=10, batch_size=64)
+plot_history(history, save_path="results/training_curves.png")
+plot_predictions(model, X_test, y_test, n=16, save_path="results/predictions.png")
+```
+
+---
+
 ## Dependencies
 
 | Package | Purpose |
